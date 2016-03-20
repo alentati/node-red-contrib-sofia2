@@ -1,0 +1,166 @@
+<!--
+  Copyright 2015 Indra Italia S.p.A.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!-- ************* NODO QUERY *************** -->
+<!-- *** 1 - layout configurazione -->
+<script type="text/x-red" data-template-name="sofia2">
+<div></div>
+
+   <div class="form-row">
+        <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+        <input type="text" id="node-input-topic" placeholder="Topic">
+    </div>
+    <br/>
+
+	   <div class="form-row">
+        <label for="node-input-s2server"><i class="fa fa-tasks"></i> Connessione Sofia2</label>
+        <input type="text" id="node-input-s2server">
+    </div>
+    <br/>
+
+
+	<div class="form-row">
+        <label for=""><i class="fa fa-tag"></i> Tipo di comando</label>
+        <select id="node-input-s2cmdtype" style="width: 73%">
+            <option value="QUERY" data-i18n="node-red:QUERY" selected="selected">Query</option>
+            <option value="INSERT" data-i18n="node-red:INSERT">Insert</option>
+			<option value="SUBSCRIBE" data-i18n="node-red:SUBSCRIBE">Subscribe</option>
+        </select>
+    </div>
+    <br/>
+
+	<div class="form-row">
+		<label for="node-input-s2cmd"><i class="fa fa-tag"></i> Comando Sofia2</label>
+		<input type="text" id="node-input-s2cmd" placeholder="s2cmd">
+	</div>
+
+	<div class="form-row">
+		<label for="node-input-s2ontology"><i class="fa fa-tag"></i> Ontologia</label>
+		<input type="text" id="node-input-s2ontology" placeholder="s2ontology">
+	</div>
+
+	
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<!-- *** 2 - help text -->
+<script type="text/x-red" data-help-name="sofia2">
+   <p>Nodo Sofia2 per eseguire query via MQTT. Usa i parametri del nodo sofia2-server.</p>
+   <p>Questa è una prima versione con un nodo do-it-all. Seguiranno versioni "in" e "out" con parametri nel msg, tipi di comandi differenziati ecc.</p>
+   <p>Per ora tutti i comandi sono in versione SQL-LIKE</p>
+	<p>NB: per funzionare questo nodo ha bisogno delle seguenti versioni di moduli:
+	<br/>* mqtt@0.3.11 NB: la versione 1.6.1 NON va bene! Capire cosa è cambiato ed eventualente come aggiornare all'ultima versione.
+	<br/>* q@1.0.1 o superiori. NB: l'ultima versione disponibile (1.4.1) VA BENE.
+	</p>
+	<p><b>QUERY</b>
+	If the incoming payload is not empty it overrides query field in the configuration.
+	<p><b>INSERT</b>
+	If the incoming payload is not empty it overrides query field in the configuration.
+	<p><b>SUBSCRIBE</b>
+	...
+	</p>
+</script>
+
+
+<!-- *** 3 - default, registrazione ecc -->
+<script type="text/javascript">
+    RED.nodes.registerType('sofia2',{
+        category: 'function',      // the palette category
+        defaults: {             // defines the editable properties of the node
+			s2server: {type:"sofia2-server", required:true},	// *** riferimento al config-node con la connessione a Sofia2 ***
+            name: {value:"Sofia2"},
+            topic: {value:"", required:true},
+			s2cmd: {value: "select * from TestSensorTemperatura where Sensor.measure=26 limit 1", required:false},
+			s2cmdtype :  {value: "QUERY", required:true},
+			s2ontology : {value: "TestSensorTemperatura"},
+			outputs : {value:1}
+        },
+        inputs:1,               // set the number of inputs - only 0 or 1
+        outputs:1,              // set the number of outputs - 0 to n
+        icon: "sofia2.png",     // set the icon (held in icons dir below where you save the node)
+		color: "#FFCC66",		// colore dalla palette
+        label: function() {     // sets the default label contents
+            return this.name||this.topic||"sofia2";
+        },
+        labelStyle: function() { // sets the class to apply to the label
+            return this.name?"node_label_italic":"";
+        },
+        oneditsave: function() {
+			// SUBSCRIBE nodes have two outputs:
+			if ($("#node-input-s2cmdtype").val() == "SUBSCRIBE") {
+				this.outputs = 2;
+            } else {
+				this.outputs = 1;
+			}
+        }
+    });
+</script>
+
+<!-- ************* NODO CONFIGURAZIONE *************** -->
+<!-- *** 1 - layout configurazione -->
+<script type="text/x-red" data-template-name="sofia2-server">
+	<div class="form-row">
+		<label for="node-config-input-s2instance"><i class="fa fa-tag"></i> Sofia2 Instance</label>
+		<input type="text" id="node-config-input-s2instance"  placeholder="s2instance">
+	</div>
+	
+	<div class="form-row">
+		<label for="node-config-input-s2port"><i class="fa fa-tag"></i> Sofia2 MQTT port</label>
+		<input type="text" id="node-config-input-s2port" placeholder="s2port">
+    </div>
+
+	<div class="form-row">
+        <label for="node-config-input-s2token"><i class="fa fa-tag"></i> Token</label>
+        <input type="text" id="node-config-input-s2token" placeholder="s2token">
+    </div>
+
+    <div class="form-row">
+        <label for="node-config-input-s2kpkpinst"><i class="fa fa-tag"></i> KP:KPinstance</label>
+        <input type="text" id="node-config-input-s2kpkpinst" placeholder="s2kpkpinst">
+    </div>
+
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="confname">
+    </div>
+
+	
+</script>
+
+<!-- *** 3 - default, registrazione ecc -->
+<script type="text/javascript">
+    RED.nodes.registerType('sofia2-server',{
+        category: 'config',      // NODO DI CONFIGURAZIONE!
+        defaults: {             // defines the editable properties of the node
+ 			s2instance: {value:"sofia2.com", required:true},
+			s2port: {value:1880, validate:RED.validators.number()},
+			s2token: {value:"e5e8a005d0a248f1ad2cd60a821e6838"},
+			s2kpkpinst: {value: "KPTestTemperatura:KPTestTemperatura01"},
+			name: {value:"sofia2.com"}
+        },
+        icon: "sofia2.png",     // set the icon (held in icons dir below where you save the node)
+		color: "#FFCC66",		// colore dalla palette
+        label: function() {     // sets the default label contents
+            return this.name||this.topic||"sofia2-server";
+        },
+        labelStyle: function() { // sets the class to apply to the label
+            return this.name?"node_label_italic":"";
+        }
+    });
+</script>
