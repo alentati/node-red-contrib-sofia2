@@ -42,7 +42,7 @@ module.exports = function(RED) {
 		// **** Creo la connessione
 		node.log('Instance: ' + i);		
 		var myKp = new kp.KpMQTT();
-				
+
 		myKp.connect(node.s2instance, node.s2port)
 		.then(function() {
 			// Generate JOIN SSAP message and send it
@@ -60,28 +60,28 @@ module.exports = function(RED) {
 				// TODO - verify exception management etc.
 				node.error('Error subscribing to SIB: ' + joinResponse.body);
 				//throw new Error('<<<' + i + '>>>' + 'Error subscribing to SIB: ' + joinResponse.body);
-			}			
+			}
 		})
 		.done(function() {
 			node.log('<<<' + i + '>>>' + ' Connection established');
 			node.myKp = myKp;
 		});
-		
+
 		/* Cleanup on re-deploy */
 		this.on("close", function() {
 			var ssapMessageLEAVE = ssapMessageGenerator.generateLeaveMessage(node.sessionKey);
-            myKp.send(ssapMessageLEAVE)
+			myKp.send(ssapMessageLEAVE)
 			.then(function(leaveResponse) {
-                var leaveResponseBody = JSON.parse(leaveResponse.body);
+				var leaveResponseBody = JSON.parse(leaveResponse.body);
 				if (leaveResponseBody.ok) {
 					node.log('<<<' + i + '>>>' + 'Session closed with SIB');
 				} else {
 					node.error('<<<' + i + '>>>' + 'Error closing session with SIB: ' + leaveResponse.body);
 				}
 			})
-            
+           
 			myKp.disconnect();
-            node.log('<<<' + i + '>>>' + ' Connection terminated');
+			node.log('<<<' + i + '>>>' + ' Connection terminated');
 		});
 	}
 	RED.nodes.registerType("sofia2-server",Sofia2ConfigNode);
@@ -91,7 +91,7 @@ module.exports = function(RED) {
 		************************************ */
     function Sofia2InNode(n) {
         RED.nodes.createNode(this,n);
-		this.log("entered function Sofia2InNode(n)");
+		this.log("Entered function Sofia2InNode(n)");
 	
 		var sessionKey;
 		var myKp;
@@ -113,6 +113,7 @@ module.exports = function(RED) {
 			this.s2querytype	= "SQLLIKE";	// TODO: Manage NATIVE too *************
 		} else {
 			// No config node configured
+			//this.status({shape:"dot", fill:"red", text:"[NO CONNECTION]"});
 			this.error("ERROR: NO CONFIGURATION NODE AVAILABLE!");
 		}
  
@@ -121,6 +122,10 @@ module.exports = function(RED) {
         var msg = {};
         msg.topic = this.topic;
 
+		// Show the node type and status
+		// TODO: manage properly, check conenction etc.
+		node.status({shape:"dot", fill:"green", text:node.s2cmdtype});
+		
         // respond to inputs
         this.on('input', function (msg) {
 			try{
@@ -263,15 +268,36 @@ module.exports = function(RED) {
 						// Just send Subscribe result output (not the notifications):
 						node.log('<<<' + i + '>>>' + ' Subscribe - Done');
 						node.send([msg, null]);
-					});	
+					});
+
+				// TODO: implement and manage CONFIG (see http://about.sofia2.com/2014/04/14/conociendo-el-protocolo-de-interoperabilidad-de-sofia2-ssap/)
+				} else if (node.s2cmdtype =="CONFIG"){	// *********************** CONFIG *********************
+					node.log('>>>>>>>>>>>>>>>>> CONFIG <<<<<<<<<<<<<<<<');
+
+					// TODO: currently everything is hardcoded
+					var ssapMessageCONFIG = ssapMessageGenerator.generateConfigMessage("e5e8a005d0a248f1ad2cd60a821e6838","KPTestTemperatura01","KPTestTemperatura");
+					node.log('ssapMessageCONFIG: ' + ssapMessageCONFIG);
+					
+					// retrieve the config
+					myKp.send(ssapMessageCONFIG)
+					.then(function(queryResponse) {
+						var configResponseBody = JSON.parse(configResponseBody.body);
+						node.log('Query return: ' + configResponseBody);
+						msg.payload = configResponseBody;
+					})
+					.done(function() {
+						node.log('<<<' + i + '>>>' + ' CONFIG - Done');
+						node.send(msg);
+					});
+
 				}
 				// TODO: implement and manage UNSUBSCRIBE (how?)
-				// TODO: implement and manage CONFIG (see http://about.sofia2.com/2014/04/14/conociendo-el-protocolo-de-interoperabilidad-de-sofia2-ssap/)
 				
 			} catch(e) {
 				node.error('<<<' + i + '>>>' + ' ERROR: '+e.message);
 			}
         });
     }
+	
     RED.nodes.registerType("sofia2",Sofia2InNode);
 }

@@ -18,7 +18,7 @@ var SSAPMessageGenerator = {
 	 * AS PER http://about.sofia2.com/2014/04/14/conociendo-el-protocolo-de-interoperabilidad-de-sofia2-ssap/
 	 */
 	generateConfigMessage : function(token, kpinstance, kp) {
-		var queryJoin = '{"body":"{\\"instanciaKp\\":\\"'
+		var queryJoin = '{"body":"{\\"instance\\":\\"'
 			+ kpinstance
 			+ '\\",\\"kp\\":\\"'
 			+ kp
