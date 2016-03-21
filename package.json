@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-sofia2",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A sample Nodered node to easily interact with Indra's Sofia2 IoT platform.",
   "author": "Alberto Lentati",
   "xdependenciesx": {
@@ -29,5 +29,16 @@
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/alentati/node-red-contrib-sofia2/issues"
-  }
+  },
+    "maintainers": [
+    {
+      "name": "alentati",
+    },
+		{
+      "name": "anappo",
+    },
+	{
+      "name": "crizzuto",
+    }
+	]
 }
