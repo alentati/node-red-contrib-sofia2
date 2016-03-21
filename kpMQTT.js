@@ -109,14 +109,12 @@ KpMQTT.prototype.send = function(ssapMessage) {
 			ssapMessage = Base64.encode(XXTEA.encrypt(ssapMessage, this.cipherKey), false);
 		}
 	}
-
 	var deferred = Q.defer();
-	
 	var self = this;
 	this.client.publish(CLIENT_TOPIC, ssapMessage, {qos: 1, retain: false}, function() {
 		self.subscriptionsPromises.push(deferred);
 	});
-
+	
 	return deferred.promise;
 };
 
