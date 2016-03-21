@@ -11,7 +11,7 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
+ * limitations under the License.-
  **/
 
 module.exports = function(RED) {
@@ -45,7 +45,8 @@ module.exports = function(RED) {
 				
 		myKp.connect(node.s2instance, node.s2port)
 		.then(function() {
-			// JOIN Message generation
+			// Generate JOIN SSAP message and send it
+			// TODO: Manage session disconnections after prolonged inactivity
 			var ssapMessageJOIN = ssapMessageGenerator.generateJoinByTokenMessage(node.s2token, node.s2kpkpinst );
 			return myKp.send(ssapMessageJOIN);
 		})

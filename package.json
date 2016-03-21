@@ -1,18 +1,33 @@
 {
-    "name"			: "node-red-contrib-sofia2",
-    "version"		: "0.0.1",
-    "description"	: "A sample Nodered node to easily interact with Indra's Sofia2 IoT platform.",
-	"author"		: "Alberto Lentati",
-    "dependencies"	: {},
-    "keywords": [
-		"node-red",
-		"sofia2",
-		"indra"
-	],
-	"homepage"		: "http://www.sofia2.com",
-    "node-red"     : {
-        "nodes": {
-            "sofia2": "sofia2.js"
-        }
+  "name": "node-red-contrib-sofia2",
+  "version": "0.0.1",
+  "description": "A sample Nodered node to easily interact with Indra's Sofia2 IoT platform.",
+  "author": "Alberto Lentati",
+  "xdependenciesx": {
+     "mqtt": "0.3.x",
+     "q": "1.4.x"
+  },
+  "keywords": [
+    "node-red",
+    "sofia2",
+    "indra"
+  ],
+  "homepage": "http://www.sofia2.com",
+  "node-red": {
+    "nodes": {
+      "sofia2": "sofia2.js"
     }
+  },
+  "main": "sofia2.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alentati/node-red-contrib-sofia2.git"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/alentati/node-red-contrib-sofia2/issues"
+  }
 }

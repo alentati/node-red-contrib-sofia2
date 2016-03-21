@@ -6,6 +6,9 @@
  ******************************************************************************/
 var mqtt   = require("mqtt");
 var Q      = require('q');
+// CHECK
+//var mqtt   = require("mqtt@0.3.11");
+//var Q      = require('q');
 var XXTEA  = require('./XXTEA');
 var Base64 = require('./base64');
 

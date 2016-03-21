@@ -19,8 +19,6 @@ Run the following command in the root directory of your Node-RED install.
     (sudo) npm install -g --save mqtt@0.3.11
     (sudo) npm install -g node-red-contrib-sofia2
 
-...and hope for the better.
-
 ##Usage
 ***[TBC]...***
 	
