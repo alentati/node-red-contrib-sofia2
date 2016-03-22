@@ -8,14 +8,14 @@ It has been developed starting from Sofia2 Node.js APIs available here: http://s
 Due to this, it currently works over MQTT and makes use of mqtt 0.3.11.
 
 ##Pre-requisite
-The node has the following dependencies (currently not declared in `package.json`:
+The node has the following dependencies (currently not declared in `package.json`, so they must be installed manually):
 
  1. mqtt@0.3.11: this is required by Sofia2 Node.js APIs. The node doesn't work with 1.6.x version right now.
  2. q, any version. 1.4.1 is fine.
 
 
 ##Install
-**PLEASE NOTE: Installation process at the moment is quite troublesome, particularly with MQTT dependencies. Right now yoy have to manually fix the dependencies, sorry for that -hope to fix it soon.**.
+**PLEASE NOTE: Installation process at the moment is quite troublesome, particularly with MQTT dependencies. Right now yoy have to manually fix the dependencies, sorry for that -hope to fix it soon. **.
 
 Run the following command in the root directory of your Node-RED install.
  
