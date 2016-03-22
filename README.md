@@ -5,7 +5,7 @@ node-red-contrib-sofia2
 
 This is a node designed to interact with Sofia2 ontologies. It allows to perform query, insert and subscribe commands.
 It has been developed starting from Sofia2 Node.js APIs available here: http://sofia2.org/apis/SOFIA2_API_NODEJS/SOFIA2_API_NODEJS.zip
-Due to this, it currently works over MQTT and makes use of mqtt 0.3.11.
+Due to this, it currently works over MQTT and makes use of mqtt 0.3.11
 
 ##Pre-requisite
 The node has the following dependencies (currently not declared in `package.json`, so they must be installed manually):
