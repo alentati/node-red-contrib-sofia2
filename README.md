@@ -5,24 +5,24 @@ node-red-contrib-sofia2
 
 This is a node designed to interact with Sofia2 ontologies. It allows to perform query, insert and subscribe commands.
 It has been developed starting from Sofia2 Node.js APIs available here: http://sofia2.org/apis/SOFIA2_API_NODEJS/SOFIA2_API_NODEJS.zip
-Due to this, it currently works over MQTT and makes use of mqtt 0.3.11
 
 ##Pre-requisite
 The node has the following dependencies (currently not declared in `package.json`, so they must be installed manually):
 
- 1. mqtt@0.3.11: this is required by Sofia2 Node.js APIs. The node doesn't work with 1.6.x version right now.
- 2. q, any version. 1.4.1 is fine.
+ 1. mqtt
+ 2. q
 
 
 ##Install
-**PLEASE NOTE: Installation process at the moment is quite troublesome, particularly with MQTT dependencies. Right now yoy have to manually fix the dependencies, sorry for that -hope to fix it soon. **.
 
-Run the following command in the root directory of your Node-RED install.
+Run the following commands in the root directory of your Node-RED install;
  
     (sudo) npm install -g q
     (sudo) npm install -g --save mqtt@0.3.11
     (sudo) npm install -g node-red-contrib-sofia2
 
+(Sooner or later I'll add mqtt and q dependencies into package.json for a quicker installation)
+	
 ##Usage
 
  1. Set up a CONFIG node with connection data (SOFIA2 instance address, port, KP, KP instance, auth token)

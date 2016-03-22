@@ -53,9 +53,18 @@ KpMQTT.prototype.connect = function(host, port, keepalive) {
 
 	var clientId = this.createUUID();
 
+	/*
+		A. Lentati - 2016-03-23
+		Added the following parameters to support MQTT 3.1 broker (Sofia2 version):
+			protocolId: 'MQIsdp',
+			protocolVersion: 3
+		See https://www.npmjs.com/package/mqtt#client for reference
+	*/
     var opts = {
         clientId  : clientId,
-        keepalive : keepalive 
+        keepalive : keepalive,
+		protocolId: 'MQIsdp',
+		protocolVersion: 3
     };
 	
 	this.client = mqtt.createClient(port, host, opts);
