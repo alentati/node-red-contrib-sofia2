@@ -1,7 +1,7 @@
 {
   "name": "node-red-contrib-sofia2",
-  "version": "0.0.5",
-  "description": "A sample Nodered node to easily interact with Indra's Sofia2 IoT platform.",
+  "version": "0.0.6",
+  "description": "A Node-RED node to interact with Indra's Sofia2 IoT platform.",
   "author": "Alberto Lentati",
   "xdependenciesx": {
      "mqtt": "0.3.x",
@@ -20,7 +20,7 @@
   },
   "main": "sofia2.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified yet\" && exit 1"
   },
   "repository": {
     "type": "git",
