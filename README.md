@@ -18,7 +18,7 @@ The node has the following dependencies (currently not declared in `package.json
 Run the following commands in the root directory of your Node-RED install;
  
     (sudo) npm install -g q
-    (sudo) npm install -g --save mqtt@0.3.11
+    (sudo) npm install -g --save mqtt
     (sudo) npm install -g node-red-contrib-sofia2
 
 (Sooner or later I'll add mqtt and q dependencies into package.json for a quicker installation)
