@@ -54,7 +54,7 @@ KpMQTT.prototype.connect = function(host, port, keepalive) {
 	var clientId = this.createUUID();
 
 	/*
-		A. Lentati - 2016-03-23
+		alentati - 2016-03-23
 		Added the following parameters to support MQTT 3.1 broker (Sofia2 version):
 			protocolId: 'MQIsdp',
 			protocolVersion: 3
@@ -92,7 +92,7 @@ KpMQTT.prototype.connect = function(host, port, keepalive) {
 	return Q.all([
 		Q.ninvoke(this.client, "subscribe", TOPIC_PUBLISH_PREFIX + clientId),
 		Q.ninvoke(this.client, "subscribe", TOPIC_SUBSCRIBE_INDICATION_PREFIX + clientId)
-	]).timeout(keepalive * 1000);
+	]);//.timeout(keepalive * 1000);	// alentati - removed to avoid nodered crashes on connection unreacheable.
 };
 
 KpMQTT.prototype.disconnect = function() {
