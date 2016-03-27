@@ -20,6 +20,7 @@ module.exports = function(RED) {
 	var kp = require('./kpMQTT');
 	var ssapMessageGenerator = require("./SSAPMessageGenerator");
 	var i=0;
+	var myInterval;
 
 	/* *************************************
 		Configuration node "sofia2-server"
@@ -36,37 +37,49 @@ module.exports = function(RED) {
 		this.s2kpkpinst		= m.s2kpkpinst;
 		this.sessionKey		= null;
 		this.myKp			= null;
-		
-        // copy "this" object in case we need it in context of callbacks of other functions.
+		this.connected		= false;
         var node = this;
-		// **** Creo la connessione
+		
+		// Create the connection
 		node.log('Instance: ' + i);		
 		var myKp = new kp.KpMQTT();
-
-		myKp.connect(node.s2instance, node.s2port)
-		.then(function() {
-			// Generate JOIN SSAP message and send it
-			// TODO: Manage session disconnections after prolonged inactivity
-			var ssapMessageJOIN = ssapMessageGenerator.generateJoinByTokenMessage(node.s2token, node.s2kpkpinst );
-			return myKp.send(ssapMessageJOIN);
-		})
-		.then(function(joinResponse) {
-			var joinResponseBody = JSON.parse(joinResponse.body);
-			if (joinResponseBody.ok) {
-				node.sessionKey = joinResponse.sessionKey;
-				node.connected = true;
-				node.log('<<<' + i + '>>>' + 'Session created with SIB with sessionKey: ' + node.sessionKey);
-			} else {
-				// TODO - verify exception management etc.
-				node.error('Error subscribing to SIB: ' + joinResponse.body);
-				//throw new Error('<<<' + i + '>>>' + 'Error subscribing to SIB: ' + joinResponse.body);
+		myConnection();	// To handle re-connect and connection crashes
+		clearInterval(myInterval);
+		myInterval= setInterval( function() { 
+			if (myKp != null && typeof(myKp) != "undefined")  {
+				if (!myKp.isConnected()) {
+					myConnection();	// retry...
+				}
 			}
-		})
-		.done(function() {
-			node.log('<<<' + i + '>>>' + ' Connection established');
-			node.myKp = myKp;
-		});
-
+		}, 3000);
+		
+		function myConnection () {
+			myKp.connect(node.s2instance, node.s2port)
+			.then(function() {
+				// Generate JOIN SSAP message and send it
+				// TODO: Manage session disconnections after prolonged inactivity
+				var ssapMessageJOIN = ssapMessageGenerator.generateJoinByTokenMessage(node.s2token, node.s2kpkpinst );
+				return myKp.send(ssapMessageJOIN);
+			})
+			.then(function(joinResponse) {
+				var joinResponseBody = JSON.parse(joinResponse.body);
+				if (joinResponseBody.ok) {
+					node.sessionKey = joinResponse.sessionKey;
+					node.connected = true;
+					node.log('<<<' + i + '>>>' + 'Session created with SIB with sessionKey: ' + node.sessionKey);
+				} else {
+					// TODO - verify exception management etc.
+					node.connected = false;
+					node.error('Error subscribing to SIB: ' + joinResponse.body);
+				}
+			})
+			.done(function() {
+				node.log('<<<' + i + '>>>' + ' Connection established');
+				node.myKp = myKp;
+				console.log('First isConnected: '+myKp.isConnected());
+			});
+		}
+		
 		/* Cleanup on re-deploy */
 		this.on("close", function() {
 			var ssapMessageLEAVE = ssapMessageGenerator.generateLeaveMessage(node.sessionKey);
@@ -79,7 +92,7 @@ module.exports = function(RED) {
 					node.error('<<<' + i + '>>>' + 'Error closing session with SIB: ' + leaveResponse.body);
 				}
 			})
-           
+			node.connected = false;
 			myKp.disconnect();
 			node.log('<<<' + i + '>>>' + ' Connection terminated');
 		});
@@ -114,7 +127,7 @@ module.exports = function(RED) {
 		} else {
 			// No config node configured
 			//this.status({shape:"dot", fill:"red", text:"[NO CONNECTION]"});
-			this.error("ERROR: NO CONFIGURATION NODE AVAILABLE!");
+			this.error("*** No configuration node defined in Sofia2 node ***");
 		}
  
         // copy "this" object in case we need it in context of callbacks of other functions.
@@ -124,7 +137,7 @@ module.exports = function(RED) {
 
 		// Show the node type and status
 		// TODO: manage properly, check conenction etc.
-		node.status({shape:"dot", fill:"green", text:node.s2cmdtype});
+		node.status({shape:"ring", fill:"green", text:node.s2cmdtype});
 		
         // respond to inputs
         this.on('input', function (msg) {
@@ -142,7 +155,7 @@ module.exports = function(RED) {
 				
 				var payload_in = msg.payload;
 				msg.payload = {};
-
+				
 				if (node.s2cmdtype =="QUERY"){	// *********************** QUERY *********************
 					node.log('>>>>>>>>>>>>>>>>> QUERY <<<<<<<<<<<<<<<<');
 					
