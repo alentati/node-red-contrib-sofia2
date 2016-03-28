@@ -62,18 +62,20 @@
 
 <!-- *** 2 - help text -->
 <script type="text/x-red" data-help-name="sofia2">
-   <p>This is a node designed to interact with <a href="http://sofia2.com">Sofia2</a> ontologies. It allows to perform query, insert and subscribe commands.</p><br/>
-	It has been developed starting from <b>Sofia2</b> Node.js APIs available <a href="http://sofia2.org/apis/SOFIA2_API_NODEJS/SOFIA2_API_NODEJS.zip">here</a></p>
-   <p>This is a preliminar version. Right now only SQLLIKE statements supported.</p>
-   <br/>
-   <p><b>USAGE</b></p>
-	<p>
-	1. Set up a CONFIG node with connection data (SOFIA2 instance address, port, KP, KP instance, auth token)<br/>
-	2. Assign a CONFIG node to a SERVER node and fill in parameters based on the selected operation (TBC)<br/>
-	</p>
-	<p><b>NOTE</b>: QUERY and INSERT nodes only have one optput; however, SUBSCRIBE node has two -the first one being the output from "subscribe" operation, the other one dedicated to indications getting notified from Sofia2.
-   </p>
-   
+   <p>A node to interact with <a href="http://sofia2.com">Sofia2</a> ontologies. It implements <b>query</b>, <b>insert</b> and <b>subscribe</b> commands.</p>
+<p>It was developed starting from <b>Sofia2</b> Node.js APIs available <a href="http://sofia2.org/apis/SOFIA2_API_NODEJS/SOFIA2_API_NODEJS.zip">here</a></p>
+<p>This is a preliminary version. Only SQLLIKE statements are supported. Also expect some errors and crashes.</p>
+<p><b>USAGE</b></p>
+<p>
+1. Set up a CONFIG node with connection data (SOFIA2 instance address, port, KP, KP instance, auth token)<br/>
+2. Assign a CONFIG node to a SERVER node and fill in parameters based on the selected operation</p>
+<p><b>QUERY</b></p>
+<p>If the incoming msg.payload is not empty it overrides query field in the configuration.</p>
+<p><b>INSERT</b></p>
+<p>If the incoming msg.payload is not empty it overrides command field in the configuration.</p>
+<p><b>SUBSCRIBE</b></p>
+<p>This node has two outputs 1 = subscription result, 2 = notification data. TBC...</p>
+<p></p>   
 </script>
 
 

@@ -76,7 +76,7 @@ module.exports = function(RED) {
 			.done(function() {
 				node.log('<<<' + i + '>>>' + ' Connection established');
 				node.myKp = myKp;
-				console.log('First isConnected: '+myKp.isConnected());
+				//node.log('First isConnected: '+myKp.isConnected());
 			});
 		}
 		
@@ -170,11 +170,13 @@ module.exports = function(RED) {
 						query_cmd = payload_in;
 					}
 
+					/*
 					node.log('s2cmdtype: ' + node.s2cmdtype);
 					node.log('query to be performed: ' + query_cmd);
 					node.log('s2ontology: ' + node.s2ontology);
 					node.log('sessionKey: ' + sessionKey);
-						
+					*/
+					
 					var ssapMessageQUERY = ssapMessageGenerator.generateQueryWithQueryTypeMessage(query_cmd, node.s2ontology , "SQLLIKE", null, sessionKey);
 					node.log('ssapMessageQUERY: ' + ssapMessageQUERY);
 					
@@ -208,10 +210,13 @@ module.exports = function(RED) {
 						node.log("Using command from incoming payload...");
 						insert_cmd = payload_in;
 					}
+					
+					/*
 					node.log('s2cmdtype: ' + node.s2cmdtype);
 					node.log('query to be performed: ' + insert_cmd);
 					node.log('s2ontology: ' + node.s2ontology);
 					node.log('sessionKey: ' + sessionKey);
+					*/
 
 					var ssapMessageINSERT = ssapMessageGenerator.generateInsertMessage(insert_cmd, node.s2ontology, sessionKey);
 						
@@ -239,10 +244,13 @@ module.exports = function(RED) {
 						* msg2 : INDICATIONS return values
 					*/
 					var msg2 = { payload:"" };	// Message for notifications
+					
+					/*
 					node.log('query: ' + node.s2cmd);
 					node.log('s2ontology: ' + node.s2ontology);
 					node.log('s2querytype: ' + node.s2querytype);
 					node.log('sessionKey: ' + sessionKey);
+					*/
 					
 					// NOTIFICATION function. Gets invoked asynchronously whenever the subscribed event is matched
 					var notificationPromise = new Promise(function(resolve, reject) {
@@ -250,7 +258,6 @@ module.exports = function(RED) {
 							//node.log("======> Notification for messageId: " + JSON.parse(message).messageId);	// Show the originating subscriptionID
 							var notificationMessageBody = JSON.parse(message.body);
 							if (notificationMessageBody.ok) {
-								node.log("--");
 								node.log('Received notification message with data: ' + notificationMessageBody.data);
 								msg2.payload = notificationMessageBody.data;
 								node.send([null,msg2]);
@@ -263,7 +270,9 @@ module.exports = function(RED) {
 						myKp.setNotificationCallback(onNotification);
 					});
 
-					// TODO: retrieve the subscribed event from incoming payload? This could be tricky!
+					// TODO: retrieve the subscribed event from incoming payload? This could be tricky, async issues to manage (maybe).
+					node.s2cmd = node.s2cmd.replace(/\\/g, "");	// Remove any escaping character (just to avoid some nasty error)
+					node.s2cmd = node.s2cmd.replace(/\"/g, "\\\\\\\"");	// Triple escaping of double quotes. Required not to break SSAP message!
 					var ssapMessageQUERY = ssapMessageGenerator.generateSubscribeWithQueryTypeMessage(node.s2cmd, node.s2ontology , node.s2querytype, 1000, sessionKey);	// TODO: parametrize the "1000" timeframe value somehow
 					node.log('MessageSubscribe: ' + ssapMessageQUERY);
 					myKp.send(ssapMessageQUERY)
