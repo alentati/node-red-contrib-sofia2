@@ -51,7 +51,7 @@ module.exports = function(RED) {
 					myConnection();	// retry...
 				}
 			}
-		}, 3000);
+		}, 10000);	// retry every 10 seconds?
 		
 		function myConnection () {
 			myKp.connect(node.s2instance, node.s2port)
@@ -148,7 +148,6 @@ module.exports = function(RED) {
 
 				node.log('-------------------------------------------------------');
 				node.log('-   ON INPUT:' + node.s2cmdtype);
-				node.log('- ');
 				node.log("-   this.s2server.sessionKey: " + sessionKey);
 				node.log('-   <<<' + i + '>>>' + ' - received payload: ' + msg);
 				node.log('-------------------------------------------------------');
@@ -158,26 +157,14 @@ module.exports = function(RED) {
 				
 				if (node.s2cmdtype =="QUERY"){	// *********************** QUERY *********************
 					node.log('>>>>>>>>>>>>>>>>> QUERY <<<<<<<<<<<<<<<<');
-					
+
 					// *** If the incoming payload is not empty it overrides query field in the configuration
 					// TODO: create a function and reuse this for every statement
-					var query_cmd;
-					if((payload_in==null)||(payload_in=="")) {
-						node.log("Using command from configuration...");
-						query_cmd = node.s2cmd;
-					} else {
-						node.log("Using command from incoming payload...");
-						query_cmd = payload_in;
-					}
-
-					/*
-					node.log('s2cmdtype: ' + node.s2cmdtype);
-					node.log('query to be performed: ' + query_cmd);
-					node.log('s2ontology: ' + node.s2ontology);
-					node.log('sessionKey: ' + sessionKey);
-					*/
+					var s2_cmd = ((node.s2cmd==null)||(node.s2cmd==""))? payload_in:node.s2cmd;
+					// the same for ontology and incoming msg.ontology:
+					var s2_ontology = ((node.s2ontology==null)||(node.s2ontology==""))? msg.ontology:node.s2ontology;
 					
-					var ssapMessageQUERY = ssapMessageGenerator.generateQueryWithQueryTypeMessage(query_cmd, node.s2ontology , "SQLLIKE", null, sessionKey);
+					var ssapMessageQUERY = ssapMessageGenerator.generateQueryWithQueryTypeMessage(s2_cmd, s2_ontology, "SQLLIKE", null, sessionKey);
 					node.log('ssapMessageQUERY: ' + ssapMessageQUERY);
 					
 					// perform the query
@@ -200,25 +187,14 @@ module.exports = function(RED) {
 
 				} else if (node.s2cmdtype =="INSERT"){	// *********************** INSERT *********************
 					node.log('>>>>>>>>>>>>>>>>> INSERT <<<<<<<<<<<<<<<<');
-
-					// TODO: create a function and reuse this for every statement
-					var insert_cmd;
-					if((payload_in==null)||(payload_in=="")) {
-						node.log("Using command from configuration...");
-						insert_cmd = node.s2cmd;
-					} else {
-						node.log("Using command from incoming payload...");
-						insert_cmd = payload_in;
-					}
 					
-					/*
-					node.log('s2cmdtype: ' + node.s2cmdtype);
-					node.log('query to be performed: ' + insert_cmd);
-					node.log('s2ontology: ' + node.s2ontology);
-					node.log('sessionKey: ' + sessionKey);
-					*/
+					// *** If the incoming payload is not empty it overrides query field in the configuration
+					// TODO: create a function and reuse this for every statement
+					var s2_cmd = ((node.s2cmd==null)||(node.s2cmd==""))? payload_in:node.s2cmd;
+					// the same for ontology and incoming msg.ontology:
+					var s2_ontology = ((node.s2ontology==null)||(node.s2ontology==""))? msg.ontology:node.s2ontology;
 
-					var ssapMessageINSERT = ssapMessageGenerator.generateInsertMessage(insert_cmd, node.s2ontology, sessionKey);
+					var ssapMessageINSERT = ssapMessageGenerator.generateInsertMessage(s2_cmd, s2_ontology, sessionKey);
 						
 					myKp.send(ssapMessageINSERT)
 					.then(function(insertResponse) {
@@ -244,18 +220,12 @@ module.exports = function(RED) {
 						* msg2 : INDICATIONS return values
 					*/
 					var msg2 = { payload:"" };	// Message for notifications
-					
-					/*
-					node.log('query: ' + node.s2cmd);
-					node.log('s2ontology: ' + node.s2ontology);
-					node.log('s2querytype: ' + node.s2querytype);
-					node.log('sessionKey: ' + sessionKey);
-					*/
-					
-					// NOTIFICATION function. Gets invoked asynchronously whenever the subscribed event is matched
+
+					/* *******
+						NOTIFICATION function. Gets invoked asynchronously whenever the subscribed event is matched
+					   ******* */
 					var notificationPromise = new Promise(function(resolve, reject) {
 						var onNotification = function(message) {
-							//node.log("======> Notification for messageId: " + JSON.parse(message).messageId);	// Show the originating subscriptionID
 							var notificationMessageBody = JSON.parse(message.body);
 							if (notificationMessageBody.ok) {
 								node.log('Received notification message with data: ' + notificationMessageBody.data);
@@ -272,7 +242,7 @@ module.exports = function(RED) {
 
 					// TODO: retrieve the subscribed event from incoming payload? This could be tricky, async issues to manage (maybe).
 					node.s2cmd = node.s2cmd.replace(/\\/g, "");	// Remove any escaping character (just to avoid some nasty error)
-					node.s2cmd = node.s2cmd.replace(/\"/g, "\\\\\\\"");	// Triple escaping of double quotes. Required not to break SSAP message!
+					node.s2cmd = node.s2cmd.replace(/\"/g, "	\\\\\\\"");	// Triple escaping of double quotes. Required not to break SSAP message!
 					var ssapMessageQUERY = ssapMessageGenerator.generateSubscribeWithQueryTypeMessage(node.s2cmd, node.s2ontology , node.s2querytype, 1000, sessionKey);	// TODO: parametrize the "1000" timeframe value somehow
 					node.log('MessageSubscribe: ' + ssapMessageQUERY);
 					myKp.send(ssapMessageQUERY)
