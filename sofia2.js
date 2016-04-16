@@ -16,7 +16,7 @@
 
 module.exports = function(RED) {
     "use strict";
-
+	//var util = require("util");
 	var kp = require('./kpMQTT');
 	var ssapMessageGenerator = require("./SSAPMessageGenerator");
 	var i=0;
@@ -41,7 +41,7 @@ module.exports = function(RED) {
         var node = this;
 		
 		// Create the connection
-		node.log('Instance: ' + i);		
+		node.log('Instance: ' + i);
 		var myKp = new kp.KpMQTT();
 		myConnection();	// To handle re-connect and connection crashes
 		clearInterval(myInterval);
@@ -220,12 +220,22 @@ module.exports = function(RED) {
 						* msg2 : INDICATIONS return values
 					*/
 					var msg2 = { payload:"" };	// Message for notifications
+					var subscriptionId;
 
 					/* *******
 						NOTIFICATION function. Gets invoked asynchronously whenever the subscribed event is matched
 					   ******* */
 					var notificationPromise = new Promise(function(resolve, reject) {
 						var onNotification = function(message) {
+						/*
+							TODO: THIS MUST BE COMPARED WITH SUBSCRIPTION ID!!!
+						*/
+							var msgId = message.messageId;
+							node.log('============> messageId: ' + msgId);
+							node.log('============> subscriptionId: ' + subscriptionId);
+							if(msgId != subscriptionId) {
+								node.error('============== THIS NOTIFICATION IS NOT FOR ME!! ================');
+							}
 							var notificationMessageBody = JSON.parse(message.body);
 							if (notificationMessageBody.ok) {
 								node.log('Received notification message with data: ' + notificationMessageBody.data);
@@ -243,14 +253,18 @@ module.exports = function(RED) {
 					// TODO: retrieve the subscribed event from incoming payload? This could be tricky, async issues to manage (maybe).
 					node.s2cmd = node.s2cmd.replace(/\\/g, "");	// Remove any escaping character (just to avoid some nasty error)
 					node.s2cmd = node.s2cmd.replace(/\"/g, "	\\\\\\\"");	// Triple escaping of double quotes. Required not to break SSAP message!
-					var ssapMessageQUERY = ssapMessageGenerator.generateSubscribeWithQueryTypeMessage(node.s2cmd, node.s2ontology , node.s2querytype, 1000, sessionKey);	// TODO: parametrize the "1000" timeframe value somehow
-					node.log('MessageSubscribe: ' + ssapMessageQUERY);
-					myKp.send(ssapMessageQUERY)
+					var ssapMessageSUBSCRIBE = ssapMessageGenerator.generateSubscribeWithQueryTypeMessage(node.s2cmd, node.s2ontology , node.s2querytype, 1000, sessionKey);	// TODO: parametrize the "1000" timeframe value somehow
+					node.log('MessageSubscribe: ' + ssapMessageSUBSCRIBE);
+					myKp.send(ssapMessageSUBSCRIBE)
 					.then(function(subscribeResponse) {
 						var queryResponseBody = JSON.parse(subscribeResponse.body);
 						if (queryResponseBody.ok) {
-							node.log('Subscribe OK - Subscription ID: '+ queryResponseBody.data);	// TODO: store this value and avoid multiple subscriptions
-							msg.payload = 'Subscribed: ' + queryResponseBody.data;
+						/*
+							TODO: THIS VALUE MUST BE USED SOMEHOW TO DISTINGUISH WHICH NOTIFICATION CALLBACK IS INVOKED!
+						*/
+						subscriptionId = queryResponseBody.data;
+							node.log('Subscribe OK - Subscription ID: '+ subscriptionId);
+							msg.payload = 'Subscribed: ' + subscriptionId;
 						} else {
 							node.error('Error executing Subscribe in the SIB: ' + notificationMessage.body, msg);
 							//throw new Error('Error executing Subscribe in the SIB: ' + subscribeResponse.body);

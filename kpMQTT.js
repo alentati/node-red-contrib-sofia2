@@ -60,14 +60,30 @@ KpMQTT.prototype.connect = function(host, port, keepalive) {
 			protocolVersion: 3
 		See https://www.npmjs.com/package/mqtt#client for reference
 	*/
+	/*
+	// Original (Sofia2 APIs) version. Deprecated but works
     var opts = {
         clientId  : clientId,
         keepalive : keepalive,
 		protocolId: 'MQIsdp',
 		protocolVersion: 3
     };
-	
 	this.client = mqtt.createClient(port, host, opts);
+	*/
+	
+	//* New version
+	var h = host;
+	var p = port;
+	var opts = {
+		port : p,
+		host : h,
+        clientId  : clientId,
+        keepalive : keepalive,
+		reconnectPeriod: 1000,
+		protocolId: 'MQIsdp',
+		protocolVersion: 3
+    };
+	this.client = mqtt.connect(opts);
 	
 	var self = this;
 	this.client.on('message', function(topic, message) {
