@@ -221,34 +221,7 @@ module.exports = function(RED) {
 					*/
 					var msg2 = { payload:"" };	// Message for notifications
 					var subscriptionId;
-
-					/* *******
-						NOTIFICATION function. Gets invoked asynchronously whenever the subscribed event is matched
-					   ******* */
-					var notificationPromise = new Promise(function(resolve, reject) {
-						var onNotification = function(message) {
-						/*
-							TODO: THIS MUST BE COMPARED WITH SUBSCRIPTION ID!!!
-						*/
-							var msgId = message.messageId;
-							node.log('============> messageId: ' + msgId);
-							node.log('============> subscriptionId: ' + subscriptionId);
-							if(msgId != subscriptionId) {
-								node.error('============== THIS NOTIFICATION IS NOT FOR ME!! ================');
-							}
-							var notificationMessageBody = JSON.parse(message.body);
-							if (notificationMessageBody.ok) {
-								node.log('Received notification message with data: ' + notificationMessageBody.data);
-								msg2.payload = notificationMessageBody.data;
-								node.send([null,msg2]);
-							} else {
-								// Don't throw exceptions to avoid Node crash!
-								node.error('Error in notification message: ' + notificationMessage.body);
-							}
-						};
-						// ***** Register the callback ***
-						myKp.setNotificationCallback(onNotification);
-					});
+					
 
 					// TODO: retrieve the subscribed event from incoming payload? This could be tricky, async issues to manage (maybe).
 					node.s2cmd = node.s2cmd.replace(/\\/g, "");	// Remove any escaping character (just to avoid some nasty error)
@@ -262,9 +235,39 @@ module.exports = function(RED) {
 						/*
 							TODO: THIS VALUE MUST BE USED SOMEHOW TO DISTINGUISH WHICH NOTIFICATION CALLBACK IS INVOKED!
 						*/
-						subscriptionId = queryResponseBody.data;
+							subscriptionId = queryResponseBody.data;
 							node.log('Subscribe OK - Subscription ID: '+ subscriptionId);
 							msg.payload = 'Subscribed: ' + subscriptionId;
+							
+							/* *******
+								NOTIFICATION function. Gets invoked asynchronously whenever the subscribed event is matched
+							******* */
+							var notificationPromise = new Promise(function(resolve, reject) {				
+								var onNotification = function onNotif1(message) {
+								var notifDynamicFuncName = "onNotif" + subscriptionId;
+								node.log("\\\\\\\\\\\\\\\\\\\\\\" + notifDynamicFuncName + "//////////////////////////");
+								/*
+									TODO: THIS MUST BE COMPARED WITH SUBSCRIPTION ID!!!
+								*/
+								var msgId = message.messageId;
+								node.log('============> messageId: ' + msgId);
+								node.log('============> subscriptionId: ' + subscriptionId);
+								if(msgId != subscriptionId) {
+									node.error('============== THIS NOTIFICATION IS NOT FOR ME!! ================');
+								}
+								var notificationMessageBody = JSON.parse(message.body);
+								if (notificationMessageBody.ok) {
+									node.log('Received notification message with data: ' + notificationMessageBody.data);
+									msg2.payload = notificationMessageBody.data;
+									node.send([null,msg2]);
+								} else {
+									// Don't throw exceptions to avoid Node crash!
+									node.error('Error in notification message: ' + notificationMessage.body);
+								}
+							};
+							// ***** Register the callback ***
+							myKp.setNotificationCallback(onNotification, subscriptionId);
+						});
 						} else {
 							node.error('Error executing Subscribe in the SIB: ' + notificationMessage.body, msg);
 							//throw new Error('Error executing Subscribe in the SIB: ' + subscribeResponse.body);

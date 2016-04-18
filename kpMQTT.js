@@ -23,7 +23,7 @@ function nop() {}
  * Constructor
  */ 
 function KpMQTT() {
-	this.notificationCallback = nop;
+	this.notificationCallback = [];
 	this.client = null;
 	this.subscriptionsPromises = [];
 	this.cipherKey = null;
@@ -101,7 +101,10 @@ KpMQTT.prototype.connect = function(host, port, keepalive) {
 			}
             
 		} else if (topic == TOPIC_SUBSCRIBE_INDICATION_PREFIX + clientId) {
-            self.notificationCallback(JSON.parse(message));
+            //self.notificationCallback(JSON.parse(message));
+			var notifMsg = JSON.parse(message);
+			var sMsgId = notifMsg.messageId;
+			self.notificationCallback[sMsgId](notifMsg);
 		}
 	});
 	
@@ -143,12 +146,12 @@ KpMQTT.prototype.send = function(ssapMessage) {
 	return deferred.promise;
 };
 
-KpMQTT.prototype.setNotificationCallback = function(notificationCallback) {
+KpMQTT.prototype.setNotificationCallback = function(notificationCallback, subscriptionId) {
 	if (typeof notificationCallback !== 'function') {
 		throw new Error("notificationCallback must be a function");
 	}
 	
-	this.notificationCallback = notificationCallback;
+	this.notificationCallback[subscriptionId] = notificationCallback;
 };
 
 KpMQTT.prototype.setCipherKey = function(cipherKey) {
