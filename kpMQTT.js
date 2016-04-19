@@ -59,19 +59,17 @@ KpMQTT.prototype.connect = function(host, port, keepalive) {
 			protocolId: 'MQIsdp',
 			protocolVersion: 3
 		See https://www.npmjs.com/package/mqtt#client for reference
-	*/
-	/*
-	// Original (Sofia2 APIs) version. Deprecated but works
-    var opts = {
-        clientId  : clientId,
-        keepalive : keepalive,
-		protocolId: 'MQIsdp',
-		protocolVersion: 3
-    };
-	this.client = mqtt.createClient(port, host, opts);
+		Original (Sofia2 APIs) version. Deprecated but works
+		var opts = {
+			clientId  : clientId,
+			keepalive : keepalive,
+			protocolId: 'MQIsdp',
+			protocolVersion: 3
+		};
+		this.client = mqtt.createClient(port, host, opts);
 	*/
 	
-	//* New version
+	// New version, 3.1.1 style:
 	var h = host;
 	var p = port;
 	var opts = {
@@ -101,7 +99,6 @@ KpMQTT.prototype.connect = function(host, port, keepalive) {
 			}
             
 		} else if (topic == TOPIC_SUBSCRIBE_INDICATION_PREFIX + clientId) {
-            //self.notificationCallback(JSON.parse(message));
 			var notifMsg = JSON.parse(message);
 			var sMsgId = notifMsg.messageId;
 			self.notificationCallback[sMsgId](notifMsg);
@@ -146,6 +143,7 @@ KpMQTT.prototype.send = function(ssapMessage) {
 	return deferred.promise;
 };
 
+// alentati: modified to manage subscriptionId parameter (in order to store different callbacks for each subscription)
 KpMQTT.prototype.setNotificationCallback = function(notificationCallback, subscriptionId) {
 	if (typeof notificationCallback !== 'function') {
 		throw new Error("notificationCallback must be a function");
