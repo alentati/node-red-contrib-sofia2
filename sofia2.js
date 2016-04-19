@@ -266,6 +266,7 @@ module.exports = function(RED) {
 								}
 							};
 							// ***** Register the callback ***
+							
 							myKp.setNotificationCallback(onNotification, subscriptionId);
 						});
 						} else {
