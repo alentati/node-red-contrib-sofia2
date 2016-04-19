@@ -68,7 +68,7 @@ module.exports = function(RED) {
 					node.connected = true;
 					node.log('<<<' + i + '>>>' + 'Session created with SIB with sessionKey: ' + node.sessionKey);
 				} else {
-					// TODO - verify exception management etc.
+					// TODO - check exception management etc.
 					node.connected = false;
 					node.error('Error subscribing to SIB: ' + joinResponse.body);
 				}
@@ -76,7 +76,6 @@ module.exports = function(RED) {
 			.done(function() {
 				node.log('<<<' + i + '>>>' + ' Connection established');
 				node.myKp = myKp;
-				//node.log('First isConnected: '+myKp.isConnected());
 			});
 		}
 		
@@ -123,10 +122,9 @@ module.exports = function(RED) {
 			this.s2port			= this.s2server.s2port;
 			this.s2token		= this.s2server.s2token;
 			this.s2kpkpinst		= this.s2server.s2kpkpinst;
-			this.s2querytype	= "SQLLIKE";	// TODO: Manage NATIVE too *************
+			this.s2querytype	= "SQLLIKE";	// TODO: Manage NATIVE statements too 
 		} else {
 			// No config node configured
-			//this.status({shape:"dot", fill:"red", text:"[NO CONNECTION]"});
 			this.error("*** No configuration node defined in Sofia2 node ***");
 		}
  
@@ -148,7 +146,7 @@ module.exports = function(RED) {
 
 				node.log('-------------------------------------------------------');
 				node.log('-   ON INPUT:' + node.s2cmdtype);
-				node.log("-   this.s2server.sessionKey: " + sessionKey);
+				node.log("-   SessionKey: " + sessionKey);
 				node.log('-   <<<' + i + '>>>' + ' - received payload: ' + msg);
 				node.log('-------------------------------------------------------');
 				
@@ -173,10 +171,8 @@ module.exports = function(RED) {
 						var queryResponseBody = JSON.parse(queryResponse.body);
 						if (queryResponseBody.ok) {
 							node.log('Query return: ' + queryResponseBody.data);
-							node.log('Query Response OK');
 							msg.payload = queryResponseBody.data;
 						} else {
-							// Don't throw exceptions to avoid Node crash!
 							node.error('Error executing query in the SIB: ' + queryResponse.body, msg);
 						}
 					})
@@ -201,9 +197,8 @@ module.exports = function(RED) {
 						var insertResponseBody = JSON.parse(insertResponse.body);
 						if (insertResponseBody.ok) {
 							node.log('Ontology Instance inserted in the SIB with ObjectId: ' + insertResponseBody.data);
-							msg.payload = 'Ontology instance inserted: ' + insertResponseBody.data;	// TODO: change this with a return code or something
+							msg.payload = insertResponseBody.data;
 						} else {
-							// Don't throw exceptions to avoid Node crash!
 							node.error('Error inserting Ontology Instance in the SIB: ' + insertResponse.body, msg);
 						}
 					})
@@ -221,7 +216,6 @@ module.exports = function(RED) {
 					*/
 					var msg2 = { payload:"" };	// Message for notifications
 					var subscriptionId;
-					
 
 					// TODO: retrieve the subscribed event from incoming payload? This could be tricky, async issues to manage (maybe).
 					node.s2cmd = node.s2cmd.replace(/\\/g, "");	// Remove any escaping character (just to avoid some nasty error)
@@ -232,9 +226,7 @@ module.exports = function(RED) {
 					.then(function(subscribeResponse) {
 						var queryResponseBody = JSON.parse(subscribeResponse.body);
 						if (queryResponseBody.ok) {
-						/*
-							TODO: THIS VALUE MUST BE USED SOMEHOW TO DISTINGUISH WHICH NOTIFICATION CALLBACK IS INVOKED!
-						*/
+						// *** This value differentiates which notification callback shall be invoked
 							subscriptionId = queryResponseBody.data;
 							node.log('Subscribe OK - Subscription ID: '+ subscriptionId);
 							msg.payload = 'Subscribed: ' + subscriptionId;
@@ -246,12 +238,9 @@ module.exports = function(RED) {
 								var onNotification = function onNotif1(message) {
 								var notifDynamicFuncName = "onNotif" + subscriptionId;
 								node.log("\\\\\\\\\\\\\\\\\\\\\\" + notifDynamicFuncName + "//////////////////////////");
-								/*
-									TODO: THIS MUST BE COMPARED WITH SUBSCRIPTION ID!!!
-								*/
+								// *** Compare MessageId and subscriptionId to ensure everything is ok. Should not occur that they don't match!
 								var msgId = message.messageId;
-								node.log('============> messageId: ' + msgId);
-								node.log('============> subscriptionId: ' + subscriptionId);
+								node.log('===> messageId: ' + msgId + ' ===> subscriptionId: ' + subscriptionId);
 								if(msgId != subscriptionId) {
 									node.error('============== THIS NOTIFICATION IS NOT FOR ME!! ================');
 								}
@@ -261,21 +250,18 @@ module.exports = function(RED) {
 									msg2.payload = notificationMessageBody.data;
 									node.send([null,msg2]);
 								} else {
-									// Don't throw exceptions to avoid Node crash!
 									node.error('Error in notification message: ' + notificationMessage.body);
 								}
 							};
 							// ***** Register the callback ***
-							
 							myKp.setNotificationCallback(onNotification, subscriptionId);
 						});
 						} else {
 							node.error('Error executing Subscribe in the SIB: ' + notificationMessage.body, msg);
-							//throw new Error('Error executing Subscribe in the SIB: ' + subscribeResponse.body);
 						}
 					})
 					.done(function() {
-						// Just send Subscribe result output (not the notifications):
+						// Only send out Subscribe result output (not the notifications):
 						node.log('<<<' + i + '>>>' + ' Subscribe - Done');
 						node.send([msg, null]);
 					});
