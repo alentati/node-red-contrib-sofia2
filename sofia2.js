@@ -19,7 +19,8 @@ module.exports = function(RED) {
 	//var util = require("util");
 	var kp = require('./kpMQTT');
 	var ssapMessageGenerator = require("./SSAPMessageGenerator");
-	var i=0;
+	var s2ServInst = 0;	// server node instance #
+	var s2NodeInst = 0;	// sofia2 node instance #
 	var myInterval;
 
 	/* *************************************
@@ -27,7 +28,7 @@ module.exports = function(RED) {
 		************************************ */
 	function Sofia2ConfigNode(m) {
 		RED.nodes.createNode(this,m);
-		i++;
+		s2ServInst++;
 		this.log("Entered function Sofia2ConfigNode(m)");
 		
         // Store local copies of the node configuration (as defined in the .html)
@@ -41,7 +42,7 @@ module.exports = function(RED) {
         var node = this;
 		
 		// Create the connection
-		node.log('Instance: ' + i);
+		node.log('<<<' + s2ServInst + '>>> - Create connection');
 		var myKp = new kp.KpMQTT();
 		myConnection();	// To handle re-connect and connection crashes
 		clearInterval(myInterval);
@@ -66,7 +67,7 @@ module.exports = function(RED) {
 				if (joinResponseBody.ok) {
 					node.sessionKey = joinResponse.sessionKey;
 					node.connected = true;
-					node.log('<<<' + i + '>>>' + 'Session created with SIB with sessionKey: ' + node.sessionKey);
+					node.log('<<<' + s2ServInst + '>>> - Session created with SIB with sessionKey: ' + node.sessionKey);
 				} else {
 					// TODO - check exception management etc.
 					node.connected = false;
@@ -74,7 +75,7 @@ module.exports = function(RED) {
 				}
 			})
 			.done(function() {
-				node.log('<<<' + i + '>>>' + ' Connection established');
+				node.log('<<<' + s2ServInst + '>>> - Connection established');
 				node.myKp = myKp;
 			});
 		}
@@ -86,14 +87,14 @@ module.exports = function(RED) {
 			.then(function(leaveResponse) {
 				var leaveResponseBody = JSON.parse(leaveResponse.body);
 				if (leaveResponseBody.ok) {
-					node.log('<<<' + i + '>>>' + 'Session closed with SIB');
+					node.log('<<<' + s2ServInst + '>>> - Session closed with SIB');
 				} else {
-					node.error('<<<' + i + '>>>' + 'Error closing session with SIB: ' + leaveResponse.body);
+					node.error('<<<' + s2ServInst + '>>> - Error closing session with SIB: ' + leaveResponse.body);
 				}
 			})
 			node.connected = false;
 			myKp.disconnect();
-			node.log('<<<' + i + '>>>' + ' Connection terminated');
+			node.log('<<<' + s2ServInst + '>>> - Connection terminated');
 		});
 	}
 	RED.nodes.registerType("sofia2-server",Sofia2ConfigNode);
@@ -140,14 +141,14 @@ module.exports = function(RED) {
         // respond to inputs
         this.on('input', function (msg) {
 			try{
-				i++;
+				s2NodeInst++;
 				sessionKey = this.s2server.sessionKey;
 				myKp	= this.s2server.myKp;
 
 				node.log('-------------------------------------------------------');
-				node.log('-   ON INPUT:' + node.s2cmdtype);
+				node.log('-   Sofia2 Command: ' + node.s2cmdtype);
 				node.log("-   SessionKey: " + sessionKey);
-				node.log('-   <<<' + i + '>>>' + ' - received payload: ' + msg);
+				node.log('-   <<<' + s2NodeInst + '>>> - received payload: ' + msg.payload);
 				node.log('-------------------------------------------------------');
 				
 				var payload_in = msg.payload;
@@ -177,7 +178,7 @@ module.exports = function(RED) {
 						}
 					})
 					.done(function() {
-						node.log('<<<' + i + '>>>' + ' Query - Done');
+						node.log('<<<' + s2NodeInst + '>>> - Query: Done');
 						node.send(msg);
 					});
 
@@ -203,7 +204,7 @@ module.exports = function(RED) {
 						}
 					})
 					.done(function() {
-						node.log('<<<' + i + '>>>' + ' Insert - Done');
+						node.log('<<<' + s2NodeInst + '>>> - Insert: Done');
 						node.send(msg);
 					});
 					
@@ -262,7 +263,7 @@ module.exports = function(RED) {
 					})
 					.done(function() {
 						// Only send out Subscribe result output (not the notifications):
-						node.log('<<<' + i + '>>>' + ' Subscribe - Done');
+						node.log('<<<' + s2NodeInst + '>>> Subscribe: Done');
 						node.send([msg, null]);
 					});
 
@@ -282,7 +283,7 @@ module.exports = function(RED) {
 						msg.payload = configResponseBody;
 					})
 					.done(function() {
-						node.log('<<<' + i + '>>>' + ' CONFIG - Done');
+						node.log('<<<' + s2NodeInst + '>>> - CONFIG: Done');
 						node.send(msg);
 					});
 
@@ -290,7 +291,7 @@ module.exports = function(RED) {
 				// TODO: implement and manage UNSUBSCRIBE (how?)
 				
 			} catch(e) {
-				node.error('<<<' + i + '>>>' + ' ERROR: '+e.message);
+				node.error('<<<' + s2NodeInst + '>>> - ERROR: '+e.message);
 			}
         });
     }
